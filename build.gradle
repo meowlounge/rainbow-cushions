@@ -1,0 +1,94 @@
+plugins {
+    id "fabric-loom" version "1.17-SNAPSHOT"
+    id "maven-publish"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+def minecraftVersion = project.minecraft_version
+def modMinecraftVersion = project.mod_minecraft_version
+def loaderVersion = project.loader_version
+def fabricVersion = project.fabric_version
+
+base {
+    archivesName = project.archives_base_name
+}
+
+def targetJavaVersion = 25
+java {
+    sourceCompatibility = JavaVersion.toVersion(targetJavaVersion)
+    targetCompatibility = JavaVersion.toVersion(targetJavaVersion)
+    withSourcesJar()
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    runs.configureEach {
+        vmArg "-Dfabric.runtimeMappingNamespace=named"
+    }
+
+    mods {
+        "rainbow-cushions" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+}
+
+fabricApi {
+    configureDataGeneration {
+        client = true
+    }
+}
+
+repositories {
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraftVersion}"
+    mappings files("mappings/26.3-snapshot-3-named.jar")
+    modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricVersion}"
+}
+
+tasks.processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", minecraftVersion
+    inputs.property "mod_minecraft_version", modMinecraftVersion
+    inputs.property "loader_version", loaderVersion
+    filteringCharset = "UTF-8"
+
+    filesMatching("fabric.mod.json") {
+        expand(
+                version: project.version,
+                minecraft_version: minecraftVersion,
+                mod_minecraft_version: modMinecraftVersion,
+                loader_version: loaderVersion
+        )
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+    options.release.set(targetJavaVersion)
+}
+
+tasks.jar {
+    from("LICENSE.txt") {
+        rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+
+    repositories {
+    }
+}
