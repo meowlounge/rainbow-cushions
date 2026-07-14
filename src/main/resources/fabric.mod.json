@@ -2,13 +2,19 @@
   "schemaVersion": 1,
   "id": "rainbow-cushions",
   "version": "${version}",
-  "name": "rainbow-cushions",
-  "description": "",
-  "authors": [],
-  "contact": {},
+  "name": "Rainbow Cushion",
+  "description": "Makes cushions named jeb_ cycle through rainbow colors like jeb_ sheep.",
+  "authors": [
+    "cow"
+  ],
+  "contact": {
+    "homepage": "https://modrinth.com/mod/rainbowcushion",
+    "sources": "https://github.com/meowlounge/rainbow-cushions",
+    "issues": "https://github.com/meowlounge/rainbow-cushions/issues"
+  },
   "license": "MIT",
   "icon": "assets/rainbow-cushions/icon.png",
-  "environment": "*",
+  "environment": "client",
   "entrypoints": {
     "fabric-datagen": [
       "dev.prodbyeagle.rainbowCushions.client.RainbowCushionsDataGenerator"
