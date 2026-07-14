@@ -48,6 +48,17 @@ The mod is client-side. Servers don't need it, and other players only need their
 
 The finished `.jar` will be in `build/libs`.
 
+## Releasing
+
+Add a repository secret named `MODRINTH_TOKEN`, then update `mod_version` in `gradle.properties` and push a matching tag:
+
+```sh
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+The release workflow builds the mod and publishes the same `.jar` and commit list to GitHub and Modrinth.
+
 ## License
 
 [MIT](LICENSE.txt)
