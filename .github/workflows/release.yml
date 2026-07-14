@@ -1,0 +1,205 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  MODRINTH_PROJECT_ID: g6jRyQbH
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 25
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+
+      - name: Read release metadata
+        id: metadata
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          project_version="$(sed -n 's/^mod_version=//p' gradle.properties)"
+          game_version="$(sed -n 's/^minecraft_version=//p' gradle.properties)"
+
+          if [[ -z "$version" || "$version" == "$GITHUB_REF_NAME" ]]; then
+            echo "::error::Release tags must look like v1.2.3."
+            exit 1
+          fi
+
+          if [[ "$version" != "$project_version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match mod_version=$project_version."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "game_version=$game_version" >> "$GITHUB_OUTPUT"
+          echo "release_name=Rainbow Cushion $version" >> "$GITHUB_OUTPUT"
+
+      - name: Check release targets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          VERSION: ${{ steps.metadata.outputs.version }}
+        shell: bash
+        run: |
+          if [[ -z "$MODRINTH_TOKEN" ]]; then
+            echo "::error::Add a MODRINTH_TOKEN repository secret before creating a release."
+            exit 1
+          fi
+
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            echo "::error::GitHub release $GITHUB_REF_NAME already exists."
+            exit 1
+          fi
+
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -H "User-Agent: meowlounge/rainbow-cushions GitHub Actions" \
+            "https://api.modrinth.com/v2/project/${MODRINTH_PROJECT_ID}/version" \
+            > modrinth-versions.json
+
+          if jq -e --arg version "$VERSION" '.[] | select(.version_number == $version)' modrinth-versions.json >/dev/null; then
+            echo "::error::Modrinth version $VERSION already exists."
+            exit 1
+          fi
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Find release file
+        id: artifact
+        shell: bash
+        run: |
+          mapfile -t jars < <(
+            find build/libs -maxdepth 1 -type f -name '*.jar' \
+              ! -name '*-sources.jar' \
+              ! -name '*-dev.jar' \
+              -print
+          )
+
+          if [[ "${#jars[@]}" -ne 1 ]]; then
+            echo "::error::Expected one release JAR, found ${#jars[@]}."
+            printf '%s\n' "${jars[@]}"
+            exit 1
+          fi
+
+          echo "path=${jars[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Write release notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          previous_tag="$(
+            gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+              --jq '[.[] | select(.draft == false)][0].tag_name // ""'
+          )"
+
+          if [[ -n "$previous_tag" ]]; then
+            range="${previous_tag}..${GITHUB_SHA}"
+          else
+            range="$GITHUB_SHA"
+          fi
+
+          commits="$(
+            git log --no-merges --reverse \
+              --format="- %s ([%h](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commit/%H))" \
+              "$range"
+          )"
+
+          if [[ -z "$commits" ]]; then
+            echo "::error::No changes found since the previous release."
+            exit 1
+          fi
+
+          {
+            echo "## Changes"
+            echo
+            printf '%s\n' "$commits"
+            echo
+
+            if [[ -n "$previous_tag" ]]; then
+              echo "**Full changelog:** ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/${previous_tag}...${GITHUB_REF_NAME}"
+            else
+              echo "**Full history:** ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/commits/${GITHUB_REF_NAME}"
+            fi
+          } > release-notes.md
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JAR_PATH: ${{ steps.artifact.outputs.path }}
+          RELEASE_NAME: ${{ steps.metadata.outputs.release_name }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "$JAR_PATH" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$RELEASE_NAME" \
+            --notes-file release-notes.md
+
+      - name: Create Modrinth release
+        env:
+          GAME_VERSION: ${{ steps.metadata.outputs.game_version }}
+          JAR_PATH: ${{ steps.artifact.outputs.path }}
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          RELEASE_NAME: ${{ steps.metadata.outputs.release_name }}
+          VERSION: ${{ steps.metadata.outputs.version }}
+        shell: bash
+        run: |
+          jq -n \
+            --arg name "$RELEASE_NAME" \
+            --arg version "$VERSION" \
+            --arg changelog "$(cat release-notes.md)" \
+            --arg game_version "$GAME_VERSION" \
+            --arg project_id "$MODRINTH_PROJECT_ID" \
+            '{
+              name: $name,
+              version_number: $version,
+              changelog: $changelog,
+              dependencies: [
+                {
+                  project_id: "P7dR8mSH",
+                  dependency_type: "required"
+                }
+              ],
+              game_versions: [$game_version],
+              version_type: "release",
+              loaders: ["fabric"],
+              featured: true,
+              project_id: $project_id,
+              file_parts: ["mod"],
+              primary_file: "mod"
+            }' > modrinth-version.json
+
+          curl --fail-with-body --silent --show-error \
+            -H "Authorization: $MODRINTH_TOKEN" \
+            -H "User-Agent: meowlounge/rainbow-cushions GitHub Actions" \
+            -F "data=<modrinth-version.json;type=application/json" \
+            -F "mod=@${JAR_PATH};type=application/java-archive" \
+            https://api.modrinth.com/v2/version \
+            > modrinth-response.json
+
+          jq '{id, name, version_number, status}' modrinth-response.json
