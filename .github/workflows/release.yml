@@ -62,7 +62,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          VERSION: ${{ steps.metadata.outputs.version }}
         shell: bash
         run: |
           if [[ -z "$MODRINTH_TOKEN" ]]; then
@@ -72,17 +71,6 @@ jobs:
 
           if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
             echo "::error::GitHub release $GITHUB_REF_NAME already exists."
-            exit 1
-          fi
-
-          curl --fail-with-body --silent --show-error \
-            -H "Authorization: $MODRINTH_TOKEN" \
-            -H "User-Agent: meowlounge/rainbow-cushions GitHub Actions" \
-            "https://api.modrinth.com/v2/project/${MODRINTH_PROJECT_ID}/version" \
-            > modrinth-versions.json
-
-          if jq -e --arg version "$VERSION" '.[] | select(.version_number == $version)' modrinth-versions.json >/dev/null; then
-            echo "::error::Modrinth version $VERSION already exists."
             exit 1
           fi
 
