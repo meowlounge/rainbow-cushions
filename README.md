@@ -5,7 +5,7 @@
 <h1 align="center">Rainbow Cushion</h1>
 
 <p align="center">
-  Bring the classic <code>jeb_</code> rainbow effect to Minecraft's cushions.
+  Rename a cushion to <code>jeb_</code>. It turns rainbow.
 </p>
 
 <p align="center">
@@ -19,36 +19,26 @@
   <img src="docs/images/rainbow-cushion.gif" alt="A cushion cycling through rainbow colors in Minecraft" width="480">
 </p>
 
-Rainbow Cushion is a small, vanilla-friendly Fabric mod that gives cushions the same smooth rainbow animation as a `jeb_` sheep. It only changes rendering, so it can be used on multiplayer servers without installing anything server-side.
+Rainbow Cushion does one thing: it gives cushions named `jeb_` the same color cycle as a `jeb_` sheep. It works with every cushion color and doesn't add any blocks, items, or recipes.
 
-## Features
+## Using it
 
-- Smooth, animated rainbow colors using Minecraft's built-in sheep color interpolation
-- Works with every cushion color
-- Client-side only — no server installation required
-- No new blocks, items, recipes, or gameplay mechanics
+1. Rename a cushion to `jeb_` in an anvil.
+2. Place it.
 
-## How to use
+Breaking a cushion removes its custom name, so you'll need to rename it before placing it again.
 
-1. Place a cushion in an anvil.
-2. Rename it to exactly `jeb_` — including the underscore.
-3. Place the cushion and watch it cycle through the rainbow.
+## Installing
 
-> [!NOTE]
-> Cushions currently lose their custom name when broken. Rename the cushion again before placing it back down.
+You'll need Fabric Loader 0.19.3 or newer and the matching version of [Fabric API](https://modrinth.com/mod/fabric-api).
 
-## Installation
+Download the mod from [Modrinth](https://modrinth.com/mod/rainbowcushion) and put the `.jar` file in your Minecraft `mods` folder.
 
-1. Install [Fabric Loader](https://fabricmc.net/use/installer/).
-2. Install the matching [Fabric API](https://modrinth.com/mod/fabric-api) version.
-3. Download Rainbow Cushion from [Modrinth](https://modrinth.com/mod/rainbowcushion).
-4. Put the downloaded `.jar` file into your Minecraft `mods` folder.
+The current version is built for Minecraft 26.3-snapshot-3 and Java 25.
 
-The current release targets **Minecraft 26.3-snapshot-3**, **Fabric Loader 0.19.3 or newer**, and **Java 25**.
+## Servers
 
-## Multiplayer
-
-The mod only needs to be installed on your client. Other players can join without it, but they will only see the rainbow animation if they install the mod themselves.
+The mod is client-side. Servers don't need it, and other players only need their own copy if they want to see the rainbow effect.
 
 ## Building from source
 
@@ -56,8 +46,8 @@ The mod only needs to be installed on your client. Other players can join withou
 ./gradlew build
 ```
 
-The built mod will be available in `build/libs`.
+The finished `.jar` will be in `build/libs`.
 
 ## License
 
-Rainbow Cushion is available under the [MIT License](LICENSE.txt).
+[MIT](LICENSE.txt)
