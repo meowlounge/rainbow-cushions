@@ -42,7 +42,7 @@ jobs:
         run: |
           version="${GITHUB_REF_NAME#v}"
           project_version="$(sed -n 's/^mod_version=//p' gradle.properties)"
-          game_version="$(sed -n 's/^minecraft_version=//p' gradle.properties)"
+          game_versions="$(sed -n 's/^modrinth_game_versions=//p' gradle.properties)"
 
           if [[ -z "$version" || "$version" == "$GITHUB_REF_NAME" ]]; then
             echo "::error::Release tags must look like v1.2.3."
@@ -54,8 +54,13 @@ jobs:
             exit 1
           fi
 
+          if [[ -z "$game_versions" ]]; then
+            echo "::error::modrinth_game_versions must contain at least one Minecraft version."
+            exit 1
+          fi
+
           echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "game_version=$game_version" >> "$GITHUB_OUTPUT"
+          echo "game_versions=$game_versions" >> "$GITHUB_OUTPUT"
           echo "release_name=Rainbow Cushion $version" >> "$GITHUB_OUTPUT"
 
       - name: Check release targets
@@ -150,7 +155,7 @@ jobs:
 
       - name: Create Modrinth release
         env:
-          GAME_VERSION: ${{ steps.metadata.outputs.game_version }}
+          GAME_VERSIONS: ${{ steps.metadata.outputs.game_versions }}
           JAR_PATH: ${{ steps.artifact.outputs.path }}
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           RELEASE_NAME: ${{ steps.metadata.outputs.release_name }}
@@ -161,7 +166,7 @@ jobs:
             --arg name "$RELEASE_NAME" \
             --arg version "$VERSION" \
             --arg changelog "$(cat release-notes.md)" \
-            --arg game_version "$GAME_VERSION" \
+            --arg game_versions "$GAME_VERSIONS" \
             --arg project_id "$MODRINTH_PROJECT_ID" \
             '{
               name: $name,
@@ -173,7 +178,7 @@ jobs:
                   dependency_type: "required"
                 }
               ],
-              game_versions: [$game_version],
+              game_versions: ($game_versions | split(",")),
               version_type: "release",
               loaders: ["fabric"],
               featured: true,
