@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="https://modrinth.com/mod/rainbowcushion"><img src="https://img.shields.io/badge/Modrinth-Download-00AF5C?logo=modrinth&logoColor=white" alt="Download on Modrinth"></a>
-  <img src="https://img.shields.io/badge/Minecraft-26.3--snapshot--3-62B47A" alt="Minecraft 26.3-snapshot-3">
+  <img src="https://img.shields.io/badge/Minecraft-26.3--snapshot--4-62B47A" alt="Minecraft 26.3-snapshot-4">
   <img src="https://img.shields.io/badge/Fabric-Client--side-DBD0B4?logo=fabric" alt="Fabric client-side mod">
   <a href="LICENSE.txt"><img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT License"></a>
 </p>
@@ -34,7 +34,7 @@ You'll need Fabric Loader 0.19.3 or newer and the matching version of [Fabric AP
 
 Download the mod from [Modrinth](https://modrinth.com/mod/rainbowcushion) and put the `.jar` file in your Minecraft `mods` folder.
 
-The current version is built for Minecraft 26.3-snapshot-3 and Java 25.
+The current version is built for Minecraft 26.3-snapshot-4 and Java 25.
 
 ## Servers
 
@@ -53,8 +53,8 @@ The finished `.jar` will be in `build/libs`.
 Add a repository secret named `MODRINTH_TOKEN`, then update `mod_version` in `gradle.properties` and push a matching tag:
 
 ```sh
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.0.2
+git push origin v1.0.2
 ```
 
 The release workflow builds the mod and publishes the same `.jar` and commit list to GitHub and Modrinth.

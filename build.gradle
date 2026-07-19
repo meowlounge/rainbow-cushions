@@ -48,7 +48,7 @@ repositories {
 
 dependencies {
     minecraft "com.mojang:minecraft:${minecraftVersion}"
-    mappings files("mappings/26.3-snapshot-3-named.jar")
+    mappings files("mappings/${minecraftVersion}-named.jar")
     modImplementation "net.fabricmc:fabric-loader:${loaderVersion}"
     modImplementation "net.fabricmc.fabric-api:fabric-api:${fabricVersion}"
 }
