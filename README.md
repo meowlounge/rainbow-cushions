@@ -26,7 +26,7 @@ Rainbow Cushion does one thing: it gives cushions named `jeb_` the same color cy
 1. Rename a cushion to `jeb_` in an anvil.
 2. Place it.
 
-In Snapshot 3, breaking a cushion removes its custom name, so you'll need to rename it before placing it again. Snapshot 4 retains the name.
+Starting with Snapshot 4, breaking a cushion preserves its custom name, so `jeb_` stays with it when you place it again. On Snapshot 3 only, breaking it removes the name and you'll need to rename it.
 
 ## Installing
 
